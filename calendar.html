@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<title>Calendar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  z-index: 1;
+}
+.test {
+  display: none;
+  position: absolute;
+  background-color: black;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  padding: 12px 16px;
+  z-index: 1;
+}
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+</style>
+
+<script>
+var eurocal = false;
+var calendars = null;
+var days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];  
+function CalendarCreator(eid)
+{
+this.id = eid;
+this.totalMonthchange = 0;
+this.date = new Date();
+this.year = this.date.getFullYear();
+this.currentMonth = this.date.getMonth();
+this.originalMonth = this.date.getMonth();
+this.lastSelectionDay = "";
+this.startDateElem  = null;
+this.startElemColor = "";
+this.stopDateElem = null;
+}
+function processCalendars()
+{
+	let elems = document.querySelectorAll('[data-date=custom]');
+    
+	if(elems.length >  0)
+	{
+		calendars = new Array(elems.length);
+
+		for(let i = 0 ; i < elems.length;i++)
+		{
+			let cal = new CalendarCreator(elems[i].getAttribute("id"));
+    		calendars[i] = cal;
+    		RenderCalendar(0,i);
+		}
+	}
+}
+
+function RenderCalendar(increaseDecrease,calendarIndex)
+{	
+
+	let calendar = calendars[calendarIndex];
+	calendar.totalMonthchange  += increaseDecrease;
+	if(parseInt(calendar.originalMonth) + parseInt(calendar.totalMonthchange) > 11)
+	{
+		calendar.currentMonth = 0;
+    	calendar.originalMonth = 0;
+ 	 	calendar.year = parseInt(calendar.year) + 1;
+     	calendar.totalMonthchange = 0
+  	}
+  	else if(parseInt(calendar.originalMonth) + parseInt(calendar.totalMonthchange) < 0)
+  	{
+  		calendar.currentMonth = 11;
+  		calendar.originalMonth = 11;
+  		calendar.year = parseInt(calendar,year) - 1;
+  		calendar.totalMonthchange = 0;
+  		calendar.date = new Date(calendar,year, 11, 31);
+  	}
+  	else
+  	{
+		calendar.currentMonth = parseInt(calendar.originalMonth) + parseInt(calendar.totalMonthchange);
+	}
+
+var today = calendar.date.getDate(); 
+var weekday = ((eurocal)?calendar.date.getDay()+1:calendar.date.getDay());
+var month = calendar.currentMonth;
+calendar.date.setDate(1); 
+calendar.date.setMonth(month); 
+var firstweekday = ((eurocal)?calendar.date.getDay()-1:calendar.date.getDay());
+var cal = '<table id="startDate" bgColor="black" style="height:100%;color:white;border:0;width:20%;cellspacing:0;cellpadding:0;font-size:12px"><tr>'; cal += '<td colspan=7 bgcolor="black" ><center><span onclick="RenderCalendar(-1,' +calendarIndex + ')" style="cursor:pointer;color:white">&lt;&nbsp;&nbsp;&nbsp;</span><b style="color:white">'; cal += months[month]  + '   ' + calendar.year + '</b><span style="cursor:pointer;color:white" onclick="RenderCalendar(1,' +calendarIndex + ')">&nbsp;&nbsp;&nbsp;&gt;</span></td></tr>'; cal += '<tr>'; var ei = ((eurocal)?1:0); 
+for(i=0+ei;i<7+ei;i++)
+if(weekday==i+ei)
+cal += '<td bgcolor="blue"  ><center><b>' + days[i] + '</b></center></td>'; 
+else
+cal += '<td bgcolor="blue" ><center>' + days[i] + '</center></td>'; cal += '</tr><tr>'; 
+for(i=0;i<firstweekday;i++)
+cal += '<td data-emtpy="" bgcolor="grey"></td>';
+var lastDay = 0;
+for(i=0;i<31;i++)
+{ 
+	if(calendar.date.getDate()>i)
+	{ 
+		weekday = (eurocal)?calendar.date.getDay()+1:calendar.date.getDay(); 
+        if(weekday == ((eurocal)?2:0))
+		cal += '<tr>'; 
+		if(weekday == ((eurocal)?1:0))
+		bgcolor="bgcolor=\"red\""; 
+        else if(weekday == ((eurocal)?1:6))
+		bgcolor="bgcolor=\"red\""; 
+        else
+		bgcolor=""; var day = calendar.date.getDate(); 
+        if(today==day && new Date().getDate() == today)
+		cal += '<td style="cursor:pointer"   bgcolor="green" onclick="setCurrentDate(this,' +calendarIndex + ')"><b><center id="' + day +'">' + day + '</center></b></td>'; 
+        else
+		cal += '<td style="cursor:pointer"  '+bgcolor+' onclick="setCurrentDate(this,' +calendarIndex + ')"  ><center  id="' + day +'">' + day + '</center></td>'; 
+        lastDay = day;
+	}
+    else
+    {
+    const lastDayPrevMonth = new Date(calendar.date.getFullYear(),calendar.date.getMonth()-1, 0);
+    }
+	calendar.date.setDate(calendar.date.getDate()+1);
+
+}
+cal += '</td></tr></table>'; 
+
+document.getElementById(calendar.id).innerHTML=cal; 
+lastWeekDay = document.getElementById(lastDay).parentNode.parentNode.children.length;
+if(parseInt(lastWeekDay) < 7) setEmtpyDaysLastDays(document.getElementById(lastDay),calendarIndex)
+
+setEmtpyDays(calendarIndex);
+
+}
+function setEmtpyDays(calendarIndex)
+{
+let calendar = calendars[calendarIndex];
+
+	let elems = document.querySelectorAll("td[data-emtpy]");
+    const lastDayPrevMonth = new Date(calendar.date.getFullYear(), calendar.date.getMonth()-1, 0).getDate();
+    let bgcolor="bgcolor=\"grey\"";
+    let cnt = 0;
+    for(let i = elems.length -1 ;i > -1;i--)
+    {
+    	elems[i].innerHTML = '<center>' + (parseInt(lastDayPrevMonth) - parseInt(cnt)) + '</center>';
+        elems[i].style.cursor = "pointer";
+        elems[i].setAttribute("bgcolor","grey");
+        let yr = calendar.date.getMonth()-1 == 11 ? calendar.date.getFullYear() - 1 : calendar.date.getFullYear();
+        elems[i].setAttribute("data-date",calendar.date.getMonth()-1 + "/" + (parseInt(lastDayPrevMonth) - parseInt(cnt)) + "/" + yr);
+        elems[i].setAttribute("onclick","setCurrentDate(this," +calendarIndex + ")");
+      cnt++;
+    }
+}
+function setEmtpyDaysLastDays(elem,calendarIndex)
+{
+    let calendar = calendars[calendarIndex];
+	let parent = elem.parentNode.parentNode;
+    var cnt = parent.children.length;
+    var id = elem.getAttribute(id);
+  
+    for(let i = cnt ;i <=6 ;i++)
+    {
+      ;
+        let newElem = document.createElement("td");
+    	newElem.innerHTML = '<center>' + ++cnt + '</center>';
+        newElem.style.cursor ="pointer"
+        newElem.setAttribute("bgcolor","grey");
+        let yr = calendar.date.getMonth()-1 == 0 ? calendar.date.getFullYear() + 1 :calendar.date.getFullYear();
+        let dt = new Date().getMonth() == calendar.date.getMonth() ? calendar.date.getMonth()+1 : calendar.date.getMonth()
+        newElem.setAttribute("data-date",dt + "/"  +  cnt + "/" + yr);
+        newElem.setAttribute("onclick","setCurrentDate(this," + calendarIndex + ")");
+        parent.appendChild(newElem);
+    
+    }
+}
+
+//if(!OPERAMINI)RenderCalendar();
+
+
+function setCurrentDate(elem, calendarIndex)
+{
+	let cal = calendars[calendarIndex];
+	if(cal.startDateElem != null)
+    {
+    cal.startElemColor = cal.startElemColor == "red" ? cal.startDateElem.style.backgroundColor = "red" : cal.startElemColor == "green" ? cal.startDateElem.style.backgroundColor = "green" : cal.startElemColor == "grey" ?  cal.startDateElem.style.backgroundColor = "grey" :cal.startDateElem.style.backgroundColor = "black";
+     cal.startDateElem.style.color = "white";
+    }
+    cal.startDateElem = elem;
+    cal.startElemColor = elem.getAttribute("bgcolor");
+    
+    elem.style.backgroundColor = "blue";
+    cal.startDateElem.style.color = "white";
+    var d = elem.getAttribute("data-date") != null ? elem.getAttribute("data-date") : cal.currentMonth+1 + "/" + elem.innerText + "/" + cal.year;
+    
+    document.getElementById(cal.id).parentNode.previousElementSibling.value = d;
+}
+function setDate(elem)
+{
+	let calBox = elem.nextElementSibling.children[0].getAttribute("id");
+    let calendar = null;
+   	let idx = 0;
+    for(let i = 0 ; i < calendars.length;i++)
+    {
+    	if(calendars[i].id = calBox) 
+        {        
+        calendar = calendars[i];
+        idx = i;
+        break;
+        }
+    }
+  	calendar.totalMonthchange = 0;     
+  	var vals = elem.value.split("/");
+
+  	if(vals.length <= 2) return;
+  	if(elem.value == "" || vals.length == 0)
+  	{
+  		 calendar.date = new Date();
+   	 	calendar.currentMonth = calendar.date.getMonth();
+    	calendar.originalMonth = calendar.currentMonth;
+   	 	calendar.year = calendar.date.getFullYear();
+    	elem.value = calendar.currentMonth + "/" + calendar.date.getDate() + "/" + calendar.year;
+     	RenderCalendar(0,idx);
+	}
+    else if(vals.length = 3)
+  	{
+    	if(vals[0].length >= 1)
+    	{
+       	calendar.date = new Date(vals[2],vals[0],vals[1]);
+       	calendar.currentMonth = parseInt(vals[0]) -1;
+       	calendar.originalMonth = calendar.currentMonth;
+       	calendar.year = vals[2];
+      	RenderCalendar(0,idx);
+        }
+   	}
+ 		var elem = document.getElementsByTagName("table");
+  		var cb = elem.nextSibiling.children[0];
+		var elems = cb.children[0].getElementsByTagName("td");
+ 		let cnt = 0;     
+ 	for(let i = 0 ;i<elems.length;i++)
+    {    
+   		cnt++;
+        if(vals[1].indexOf("0") == 0) vals[1] = vals[1].substring(1);
+      
+         if(elems[i].innerText == vals[1])
+         {
+         	elems[i].style.backgroundColor = "blue";
+            calendar.startElemColor = calendar.startElemColor == "red" ? calendar.startDateElem.style.backgroundColor = "red" : calendar.startElemColor == "green" ? startDateElem.style.backgroundColor = "green" :startDateElem.style.backgroundColor = "black";
+             calendar.startElemColor = elems[i].getAttribute("bgcolor");
+             calendar.startDateElem = elems[i];
+             break;
+         }
+    }
+}
+</script>
+<body onload="processCalendars()">
+<div class="dropdown">
+  <input id="startDate" type="text" oninput="setDate(this)" placeholder="mm/dd/yyyy" />
+  <div class="dropdown-content" style="height:200px;width:20px;backgroundColor:black">
+<div id="CalendarBox" data-date="custom" style="height:200px;width:20px;backgroundColor:black">
+</div>
+  </div>
+</div>
+<div class="dropdown">
+  <input id="endDate" type="text" oninput="setDate(this)" placeholder="mm/dd/yyyy" />
+  <div class="dropdown-content" style="height:200px;width:20px;backgroundColor:black">
+<div id="CalendarBox1" data-date="custom" style="height:200px;width:20px;backgroundColor:black">
+</div>
+  </div>
+</div>
+</body>
+</html>
